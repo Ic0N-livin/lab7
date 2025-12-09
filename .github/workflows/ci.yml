@@ -8,4 +8,4 @@ jobs:
             - uses: actions/checkout@v4
             - name: build using gcc
 
-                run: gcc -Wall -Werror main.c
+              run: gcc -Wall -Werror main.c
