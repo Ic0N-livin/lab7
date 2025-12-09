@@ -5,6 +5,10 @@ on: [push]
 jobs:
   build:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        rid: ["win-x64", "linux-x64"]
+
     steps:
       - uses: actions/checkout@v4
 
@@ -13,22 +17,15 @@ jobs:
           dotnet-version: '8.0.x'
 
       - run: dotnet restore
-      - run: dotnet build
-      - run: dotnet publish -o app /p:PublishSingleFile=true /p:AssemblyName=app -r linux-x64 --self-contained
-      - run: tar cf app.tar app/
 
-      - uses: actions/upload-artifact@v4
-        with:
-          name: app.tar
-          path: app.tar
+      - name: Publish for ${{ matrix.rid }}
+        run: dotnet publish -o build_output -r ${{ matrix.rid }} /p:PublishSingleFile=true /p:AssemblyName=app --self-contained
 
-  test:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/download-artifact@v4
+      - name: Archive files
+        run: tar -cvf app-${{ matrix.rid }}.tar build_output/
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
         with:
-          name: app.tar
-      - run: tar xf app.tar
-      - run: chmod +x app/app
-      - run: ./app/app
+          name: app-${{ matrix.rid }}
+          path: app-${{ matrix.rid }}.tar
